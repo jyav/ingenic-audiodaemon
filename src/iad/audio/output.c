@@ -100,11 +100,13 @@ void initialize_audio_output_device(int aoDevID, int aoChnID) {
     // 4. OVERRIDE JSON FRAME SIZE FOR SIGMASTAR DMA SAFETY
     set_ao_max_frame_size(DEFAULT_AO_MAX_FRAME_SIZE);
 
-    // Allocate memory for audio_buffer based on the strict hardware frame size
-    audio_buffer = (unsigned char*) malloc(g_ao_max_frame_size);
-    if (!audio_buffer) {
-        handle_audio_error("AO: Failed to allocate memory for audio_buffer");
-        exit(EXIT_FAILURE);
+    // --- LEAK & RACE CONDITION FIX: Allocate only once ---
+    if (audio_buffer == NULL) {
+        audio_buffer = (unsigned char*) malloc(g_ao_max_frame_size);
+        if (!audio_buffer) {
+            handle_audio_error("AO: Failed to allocate memory for audio_buffer");
+            exit(EXIT_FAILURE);
+        }
     }
 
     // Debugging prints
