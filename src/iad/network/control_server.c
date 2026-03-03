@@ -141,8 +141,6 @@ void *audio_control_server_thread(void *arg) {
             continue;
         }
     
-    close(sockfd);
-    return NULL;
         handle_control_client(client_sock);
     }
 
