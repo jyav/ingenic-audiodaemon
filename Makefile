@@ -37,7 +37,7 @@ LDLIBS = -lpthread -lm -lrt -ldl -lcjson -lwebsockets
 # -----------------------------------------------------------------------------
 # TARGETS & OBJECT FILES
 # -----------------------------------------------------------------------------
-AUDIO_PROGS = build/bin/audioplay build/bin/iad build/bin/iac build/bin/wc-console build/bin/web_client
+AUDIO_PROGS = build/bin/iad build/bin/iac build/bin/wc-console build/bin/web_client
 
 # Removed build/obj/audio/audio_imp.o
 iad_OBJS = build/obj/iad.o \
@@ -133,11 +133,11 @@ build/bin/iac: version $(iac_OBJS)
 	$(CC) $(LDFLAGS) -o $@ $(iac_OBJS) $(LDLIBS)
 	$(STRIPCMD) $@
 
-audioplay: build/bin/audioplay
-build/bin/audioplay: version $(audioplay_OBJS)
-	@mkdir -p $(@D)
-	$(CC) $(LDFLAGS) -o $@ $(audioplay_OBJS) $(SSTARLDLIBS) $(LDLIBS)
-	$(STRIPCMD) $@
+#audioplay: build/bin/audioplay
+#build/bin/audioplay: version $(audioplay_OBJS)
+#	@mkdir -p $(@D)
+#	$(CC) $(LDFLAGS) -o $@ $(audioplay_OBJS) $(SSTARLDLIBS) $(LDLIBS)
+#	$(STRIPCMD) $@
 
 wc-console: build/bin/wc-console
 build/bin/wc-console: version $(wc_console_OBJS)
