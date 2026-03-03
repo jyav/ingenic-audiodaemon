@@ -106,7 +106,7 @@ void *audio_input_server_thread(void *arg) {
         close(sockfd);
         return NULL;
     }
-    pthread_detach(hw_ai_thread);
+    // pthread_detach(hw_ai_thread);
 
     while (1) {
         int should_stop = 0;
@@ -142,6 +142,9 @@ void *audio_input_server_thread(void *arg) {
 
         handle_audio_input_client(client_sock);
     }
+
+    // --- KERNEL PANIC FIX: Synchronize hardware shutdown ---
+    pthread_join(hw_ai_thread, NULL);
 
     close(sockfd);
     return NULL;
