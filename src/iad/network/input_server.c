@@ -71,53 +71,38 @@ void *audio_input_server_thread(void *arg) {
         return NULL;
     }
 
-    /*
-    if (initialize_audio_input_device(aiDevID, aiChnID) != 0) {
-        f(stderr, "[ERROR] Failed to initialize audio input device\n");
-        return NULL;
-    }
-    */
-
-    // --- SIGMASTAR GLOBAL HARDWARE THREAD ADDED ---
-    // We spawn the hardware capture thread EXACTLY ONCE here.
-    pthread_t hw_ai_thread;
-    if (pthread_create(&hw_ai_thread, NULL, ai_record_thread, NULL) != 0) {
-        f(stderr, "[FATAL] Failed to spawn SigmaStar AI hardware thread\n");
-        return NULL;
-    }
-    pthread_detach(hw_ai_thread);
-
-    update_socket_paths_from_config();
-
-    int sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (sockfd < 0) {
-        handle_audio_error(TAG, "socket");
-        return NULL;
-    }
-
     struct sockaddr_un addr;
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
     strncpy(&addr.sun_path[1], AUDIO_INPUT_SOCKET_PATH, sizeof(addr.sun_path) - 2);
     addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
 
-    ("[INFO] [AI] Attempting to bind socket\n");
+    printf("[INFO] [AI] Attempting to bind socket\n");
     if (bind(sockfd, (struct sockaddr*)&addr, sizeof(sa_family_t) + strlen(AUDIO_INPUT_SOCKET_PATH) + 1) == -1) {
         handle_audio_error(TAG, "bind failed");
         close(sockfd);
         return NULL;
     } else {
-        ("[INFO] [AI] Bind to input socket succeeded\n");
+        printf("[INFO] [AI] Bind to input socket succeeded\n");
     }
 
-    ("[INFO] [AI] Attempting to listen on socket\n");
+    printf("[INFO] [AI] Attempting to listen on socket\n");
     if (listen(sockfd, 5) == -1) {
         handle_audio_error(TAG, "listen");
         close(sockfd);
         return NULL;
     } else {
-        ("[INFO] [AI] Listening on input socket\n");
+        printf("[INFO] [AI] Listening on input socket\n");
     }
+
+    // --- ZOMBIE THREAD FIX: Spawn hardware ONLY after socket is ready ---
+    pthread_t hw_ai_thread;
+    if (pthread_create(&hw_ai_thread, NULL, ai_record_thread, NULL) != 0) {
+        fprintf(stderr, "[FATAL] Failed to spawn SigmaStar AI hardware thread\n");
+        close(sockfd);
+        return NULL;
+    }
+    pthread_detach(hw_ai_thread);
 
     while (1) {
         int should_stop = 0;
