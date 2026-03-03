@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <sys/un.h>
 #include <unistd.h>
+
 #include "input.h"
 #include "logging.h"
 #include "utils.h"
@@ -14,13 +15,12 @@
 
 #define TAG "NET_INPUT"
 
-// Global flag and mutex to control thread termination
 extern volatile int g_stop_thread;
 extern pthread_mutex_t g_stop_thread_mutex;
 
 void handle_audio_input_client(int client_sock) {
     pthread_mutex_lock(&audio_buffer_lock);
-
+    
     ClientNode *new_client = (ClientNode *)malloc(sizeof(ClientNode));
     if (!new_client) {
         handle_audio_error(TAG, "malloc");
@@ -28,17 +28,18 @@ void handle_audio_input_client(int client_sock) {
         pthread_mutex_unlock(&audio_buffer_lock);
         return;
     }
+    
     new_client->sockfd = client_sock;
     new_client->next = client_list_head;
     client_list_head = new_client;
-
+    
     pthread_mutex_unlock(&audio_buffer_lock);
-
     printf("[INFO] [AI] Input client connected\n");
 
+    // --- INGENIC CONCURRENCY BUG REMOVED ---
+    /*
     AiThreadArg thread_arg;
     thread_arg.sockfd = client_sock;
-
     pthread_t ai_thread;
     if (pthread_create(&ai_thread, NULL, ai_record_thread, &thread_arg) != 0) {
         handle_audio_error(TAG, "pthread_create");
@@ -47,12 +48,13 @@ void handle_audio_input_client(int client_sock) {
     } else {
         pthread_detach(ai_thread);
     }
+    */
+    // (We no longer spawn the hardware thread per client. It is running globally.)
 }
 
 void *audio_input_server_thread(void *arg) {
     printf("[INFO] [AI] Entering audio_input_server_thread\n");
 
-    // Fetch audio play attributes
     int aiDevID, aiChnID;
     get_audio_input_device_attributes(&aiDevID, &aiChnID);
 
@@ -60,6 +62,15 @@ void *audio_input_server_thread(void *arg) {
         fprintf(stderr, "[ERROR] Failed to initialize audio input device\n");
         return NULL;
     }
+
+    // --- SIGMASTAR GLOBAL HARDWARE THREAD ADDED ---
+    // We spawn the hardware capture thread EXACTLY ONCE here.
+    pthread_t hw_ai_thread;
+    if (pthread_create(&hw_ai_thread, NULL, ai_record_thread, NULL) != 0) {
+        fprintf(stderr, "[FATAL] Failed to spawn SigmaStar AI hardware thread\n");
+        return NULL;
+    }
+    pthread_detach(hw_ai_thread);
 
     update_socket_paths_from_config();
 
@@ -80,8 +91,7 @@ void *audio_input_server_thread(void *arg) {
         handle_audio_error(TAG, "bind failed");
         close(sockfd);
         return NULL;
-    }
-    else {
+    } else {
         printf("[INFO] [AI] Bind to input socket succeeded\n");
     }
 
@@ -90,8 +100,7 @@ void *audio_input_server_thread(void *arg) {
         handle_audio_error(TAG, "listen");
         close(sockfd);
         return NULL;
-    }
-    else {
+    } else {
         printf("[INFO] [AI] Listening on input socket\n");
     }
 
@@ -101,9 +110,7 @@ void *audio_input_server_thread(void *arg) {
         should_stop = g_stop_thread;
         pthread_mutex_unlock(&g_stop_thread_mutex);
 
-        if (should_stop) {
-            break;
-        }
+        if (should_stop) break;
 
         printf("[INFO] [AI] Waiting for input client connection\n");
         int client_sock = accept(sockfd, NULL, NULL);
@@ -111,6 +118,7 @@ void *audio_input_server_thread(void *arg) {
             handle_audio_error(TAG, "accept");
             continue;
         }
+
         handle_audio_input_client(client_sock);
     }
 
