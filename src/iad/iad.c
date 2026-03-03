@@ -67,6 +67,19 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    // --- STRICT SEQUENTIAL HARDWARE BOOT ---
+    // 1. Bring up the Speaker (so the reference channel exists)
+    int aoDev, aoChn, aiDev, aiChn;
+    get_audio_output_device_attributes(&aoDev, &aoChn);
+    initialize_audio_output_device(aoDev, aoChn);
+
+    // 2. Bring up the Microphone (so AEC can bind to the Speaker)
+    get_audio_input_device_attributes(&aiDev, &aiChn);
+    initialize_audio_input_device(aiDev, aiChn);
+
+    // 3. NOW it is safe to spawn the network threads
+    // ... (pthread_create for server threads)
+
     char *config_file_path = options.config_file_path;
     int disable_ai = options.disable_ai;
     int disable_ao = options.disable_ao;
