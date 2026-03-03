@@ -92,43 +92,47 @@ int main(int argc, char *argv[]) {
         initialize_audio_input_device(aiDev, aiChn);
     }
 
-// 5. SPAWN NETWORK & PLAYBACK THREADS
+    // 5. SPAWN NETWORK & PLAYBACK THREADS
     pthread_t control_server_thread, input_server_thread, output_server_thread, play_thread_id;
     int exit_code = 0;
+    
+    // Tracking flags to prevent joining uninitialized threads
+    int control_up = 0, input_up = 0, output_up = 0, play_up = 0;
 
-    // --- RESOURCE LEAK FIXED: Trap failures to guarantee MI_SYS_Exit ---
-    if (create_thread(&control_server_thread, audio_control_server_thread, NULL)) {
-        exit_code = 1;
-        goto cleanup;
+    // --- RESOURCE LEAK & RACE CONDITION FIX ---
+    if (create_thread(&control_server_thread, audio_control_server_thread, NULL) == 0) {
+        control_up = 1;
+    } else {
+        exit_code = 1; goto join_threads;
     }
 
     if (!disable_ai) {
-        if (create_thread(&input_server_thread, audio_input_server_thread, NULL)) {
-            exit_code = 1;
-            goto cleanup;
+        if (create_thread(&input_server_thread, audio_input_server_thread, NULL) == 0) {
+            input_up = 1;
+        } else {
+            exit_code = 1; goto join_threads;
         }
     }
 
     if (!disable_ao) {
-        if (create_thread(&output_server_thread, audio_output_server_thread, NULL)) {
-            exit_code = 1;
-            goto cleanup;
+        if (create_thread(&output_server_thread, audio_output_server_thread, NULL) == 0) {
+            output_up = 1;
+        } else {
+            exit_code = 1; goto join_threads;
         }
-        if (create_thread(&play_thread_id, ao_play_thread, NULL)) {
-            exit_code = 1;
-            goto cleanup;
+        if (create_thread(&play_thread_id, ao_play_thread, NULL) == 0) {
+            play_up = 1;
+        } else {
+            exit_code = 1; goto join_threads;
         }
     }
 
+join_threads:
     // 6. WAIT FOR COMPLETION
-    pthread_join(control_server_thread, NULL);
-    if (!disable_ai) {
-        pthread_join(input_server_thread, NULL);
-    }
-    if (!disable_ao) {
-        pthread_join(output_server_thread, NULL);
-        pthread_join(play_thread_id, NULL);
-    }
+    if (control_up) pthread_join(control_server_thread, NULL);
+    if (input_up) pthread_join(input_server_thread, NULL);
+    if (output_up) pthread_join(output_server_thread, NULL);
+    if (play_up) pthread_join(play_thread_id, NULL);
 
 cleanup:
     // Execute global teardown sequence
