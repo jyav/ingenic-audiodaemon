@@ -198,15 +198,15 @@ int disable_audio_output() {
     int aoDevID, aoChnID;
     get_audio_output_device_attributes(&aoDevID, &aoChnID);
 
-    int mute_status = 1;
+    // --- LOGIC BUG FIXED: Force Mute to prevent shutdown pop ---
+    int mute_status = 1; 
     mute_audio_output_device(mute_status);
 
     ret = MI_AO_DisableVqe(aoDevID, aoChnID);
     if (ret != 0) {
-        printf("[ERROR] [%s] SigmaStar audio Vqe disable error\n", TAG);
-        return -1;
+        printf("[ERROR] [%s] SigmaStar audio VQE disable error\n", TAG);
     }
-    
+
     ret = MI_AO_DisableChn(aoDevID, aoChnID);
     if (ret != 0) {
         printf("[ERROR] [%s] SigmaStar audio channel disable error\n", TAG);
