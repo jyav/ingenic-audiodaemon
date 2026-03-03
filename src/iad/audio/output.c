@@ -174,7 +174,8 @@ void *ao_play_thread(void *arg) {
         stAoSendFrame.apVirAddr[0] = audio_buffer;
         stAoSendFrame.apVirAddr[1] = NULL;
 
-        if (MI_AO_SendFrame(aoDevID, aoChnID, &stAoSendFrame, -1) != 0) {
+        // --- KERNEL DEADLOCK FIX: Use 200ms timeout instead of -1 (infinite) ---
+        if (MI_AO_SendFrame(aoDevID, aoChnID, &stAoSendFrame, 200) != 0) {
             pthread_mutex_unlock(&audio_buffer_lock);
             
             // --- RACE CONDITION FIX: Do not resurrect hardware during shutdown ---
@@ -182,7 +183,10 @@ void *ao_play_thread(void *arg) {
                 break;
             }
             
-            handle_and_reinitialize_output(aoDevID, aoChnID, "MI_AO_SendFrame data error");
+            // --- TIMEOUT RESET LOOP FIX ---
+            // A 200ms timeout is a natural yield when the DMA ring is full.
+            // Do not violently reinitialize the hardware. Yield and retry the same frame.
+            usleep(10000); 
             continue;
         }
 
@@ -199,34 +203,34 @@ void *ao_play_thread(void *arg) {
  */
 int disable_audio_output() {
     int ret;
-
+    int ret_val = 0; // Track errors but do not abort
     int aoDevID, aoChnID;
     get_audio_output_device_attributes(&aoDevID, &aoChnID);
 
     // --- LOGIC BUG FIXED: Force Mute to prevent shutdown pop ---
-    int mute_status = 1; 
+    int mute_status = 1;
     mute_audio_output_device(mute_status);
 
     ret = MI_AO_DisableVqe(aoDevID, aoChnID);
     if (ret != 0) {
         printf("[ERROR] [%s] SigmaStar audio VQE disable error\n", TAG);
+        ret_val = -1;
     }
 
     ret = MI_AO_DisableChn(aoDevID, aoChnID);
     if (ret != 0) {
         printf("[ERROR] [%s] SigmaStar audio channel disable error\n", TAG);
-        return -1;
+        ret_val = -1;
     }
 
     ret = MI_AO_Disable(aoDevID);
     if (ret != 0) {
         printf("[ERROR] [%s] SigmaStar audio device disable error\n", TAG);
-        return -1;
+        ret_val = -1;
     }
 
-    MI_AO_ClrPubAttr(aoDevID); // FIXED: Prevent kernel lock on daemon restart
-    
+    MI_AO_ClrPubAttr(aoDevID); // FIXED: Guaranteed to run
     cleanup_audio_output();
 
-    return 0;
+    return ret_val;
 }
