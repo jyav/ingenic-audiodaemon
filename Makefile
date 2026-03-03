@@ -36,7 +36,8 @@ endif
 
 ifeq ($(CONFIG_GCC_BUILD),y)
 CROSS_COMPILE?= mips-linux-gnu-
-IMPLDLIBS = -limp -lalog
+//IMPLDLIBS = -limp -lalog
+SSTARLDLIBS = -lmi_ao -lmi_ai -lmi_sys -lmi_common
 LDFLAGS += -Wl,--no-as-needed -Wl,--allow-shlib-undefined
 LDLIBS = -lpthread -lm -lrt -ldl -lcjson -lwebsockets
 endif
@@ -44,7 +45,8 @@ endif
 ifeq ($(CONFIG_UCLIBC_BUILD),y)
 CROSS_COMPILE?= mips-linux-uclibc-gnu-
 CFLAGS += -muclibc
-IMPLDLIBS = -limp -lalog
+//IMPLDLIBS = -limp -lalog
+SSTARLDLIBS = -lmi_ao -lmi_ai -lmi_sys -lmi_common
 # Set interpreter directory to ./libs
 LDFLAGS += -muclibc -Wl,-dynamic-linker,libs/ld-uClibc.so.0
 LDLIBS = -lpthread -lm -lrt -ldl -lwebsockets -lcjson
@@ -52,7 +54,8 @@ endif
 
 ifeq ($(CONFIG_MUSL_BUILD),y)
 CROSS_COMPILE?= mipsel-linux-
-IMPLDLIBS = -limp -lalog -lmuslshim
+//IMPLDLIBS = -limp -lalog -lmuslshim
+SSTARLDLIBS = -lmi_ao -lmi_ai -lmi_sys -lmi_common
 LDLIBS = -lwebsockets -lcjson
 endif
 
@@ -125,7 +128,7 @@ iad: build/bin/iad
 
 build/bin/iad: version $(iad_OBJS)
 	@mkdir -p $(@D)
-	$(CC) $(LDFLAGS) -o $@ $(iad_OBJS) $(IMPLDLIBS) $(LDLIBS)
+	$(CC) $(LDFLAGS) -o $@ $(iad_OBJS) $(SSTARLDLIBS) $(LDLIBS)
 	$(STRIPCMD) $@
 
 iac: build/bin/iac
@@ -139,7 +142,7 @@ audioplay: build/bin/audioplay
 
 build/bin/audioplay: version $(audioplay_OBJS)
 	@mkdir -p $(@D)
-	$(CC) $(LDFLAGS) -o $@ $(audioplay_OBJS) ${IMPLDLIBS} $(LDLIBS)
+	$(CC) $(LDFLAGS) -o $@ $(audioplay_OBJS) ${SSTARLDLIBS} $(LDLIBS)
 	$(STRIPCMD) $@
 
 wc-console: build/bin/wc-console
