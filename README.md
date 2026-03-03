@@ -12,9 +12,8 @@ The **Sigmastar Audio Daemon** (iad) serves as an intermediary between the audio
 
 ## Prerequisites
 
-- T20/T31/T40 Devices: Audio Input & Playback tested on T20/T31.  If you have a T40 device, feedback is welcome.
 - Before running the audio daemon, ensure that the audio kernel modules are loaded.
-- The daemon sets up the `IMP_AI` and `IMP_AO` devices, so it's essential for these modules to be initialized first.
+- The daemon sets up the `MI_AI` and `MI_AO` devices, so it's essential for these modules to be initialized first.
 
 ---
 
