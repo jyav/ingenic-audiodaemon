@@ -171,6 +171,11 @@ int disable_audio_input() {
     int aiDevID, aiChnID;
     get_audio_input_device_attributes(&aiDevID, &aiChnID);
 
+    if (MI_AI_DisableVqe(aiDevID, aiChnID) != 0) {
+        printf("[ERROR] [%s] SigmaStar audio VQE disable error\n", TAG);
+        return -1;
+    }
+    
     if (MI_AI_DisableChn(aiDevID, aiChnID) != 0) {
         printf("[ERROR] [%s] SigmaStar audio channel disable error\n", TAG);
         return -1;
