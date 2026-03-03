@@ -93,7 +93,19 @@ printf("[INFO] [AO] Waiting for output client connection\n");
         ssize_t read_size;
 
         printf("[INFO] [AO] Receiving audio data from client\n");
-        while ((read_size = read(client_sock, buf, sizeof(buf))) > 0) {
+		
+		// --- FATAL CONFLICT FIX: MSG_WAITALL added to prevent DMA starvation ---
+        // Using recv() with MSG_WAITALL guarantees we only wake up when we have 
+        // a perfect 2048-byte chunk for the SigmaStar MI_AO_SendFrame.
+        while ((read_size = recv(client_sock, buf, sizeof(buf), MSG_WAITALL)) > 0) {
+            
+            // If the client drops mid-frame, recv might return a partial frame.
+            // We only send perfectly sized frames to the hardware to prevent static/chipmunking.
+            if (read_size != sizeof(buf)) {
+                printf("[WARN] [AO] Partial frame received (%zd bytes). Discarding to protect DMA.\n", read_size);
+                break;
+            }
+
             pthread_mutex_lock(&audio_buffer_lock);
             memcpy(audio_buffer, buf, read_size);
             audio_buffer_size = read_size;
