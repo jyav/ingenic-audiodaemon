@@ -58,10 +58,12 @@ void *audio_input_server_thread(void *arg) {
     int aiDevID, aiChnID;
     get_audio_input_device_attributes(&aiDevID, &aiChnID);
 
+    /*
     if (initialize_audio_input_device(aiDevID, aiChnID) != 0) {
         fprintf(stderr, "[ERROR] Failed to initialize audio input device\n");
         return NULL;
     }
+    */
 
     // --- SIGMASTAR GLOBAL HARDWARE THREAD ADDED ---
     // We spawn the hardware capture thread EXACTLY ONCE here.
