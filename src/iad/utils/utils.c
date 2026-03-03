@@ -57,38 +57,6 @@ int compute_numPerFrm(int sample_rate) {
 }
 
 /**
- * @brief Convert string to audio bit width.
- *
- * This function converts a string representation of audio bit width to its corresponding enumeration value.
- *
- * @param str String representation of the audio bit width.
- * @return IMPAudioBitWidth Enumeration value of the audio bit width.
- */
-IMPAudioBitWidth string_to_bitwidth(const char* str) {
-    if (strcmp(str, "AUDIO_BIT_WIDTH_16") == 0) {
-        return AUDIO_BIT_WIDTH_16;
-    }
-    fprintf(stderr, "[WARNING] Unexpected bitwidth string: %s. Defaulting to AUDIO_BIT_WIDTH_16.\n", str);
-    return AUDIO_BIT_WIDTH_16;
-}
-
-/**
- * @brief Convert string to audio sound mode.
- *
- * This function converts a string representation of audio sound mode to its corresponding enumeration value.
- *
- * @param str String representation of the audio sound mode.
- * @return IMPAudioSoundMode Enumeration value of the audio sound mode.
- */
-IMPAudioSoundMode string_to_soundmode(const char* str) {
-    if (strcmp(str, "AUDIO_SOUND_MODE_MONO") == 0) {
-        return AUDIO_SOUND_MODE_MONO;
-    }
-    fprintf(stderr, "[WARNING] Unexpected sound mode string: %s. Defaulting to AUDIO_SOUND_MODE_MONO.\n", str);
-    return AUDIO_SOUND_MODE_MONO;
-}
-
-/**
  * @brief Clean up resources.
  *
  * This function cleans up allocated resources and restores the system to its initial state.
@@ -164,73 +132,4 @@ void daemonize() {
         exit(1);
     }
 
-    printf("Starting the program in the background as a daemon...\n");
-
-    pid_t pid = fork();
-    if (pid < 0) {
-        exit(EXIT_FAILURE);
-    }
-
-    if (pid > 0) {
-        exit(EXIT_SUCCESS);
-    }
-
-    if (setsid() < 0) {
-        exit(EXIT_FAILURE);
-    }
-
-    signal(SIGCHLD, SIG_IGN);
-
-    chdir("/");
-
-    umask(0);
-
-    close(STDIN_FILENO);
-    close(STDOUT_FILENO);
-    close(STDERR_FILENO);
-
-    open("/dev/null", O_RDWR);
-    dup(0);
-    dup(0);
-}
-
-/**
- * @brief Check if an instance is already running.
- *
- * This function checks if another instance of the program is already running by attempting to acquire a lock on the PID file.
- *
- * @return int Returns 1 if another instance is running, 0 otherwise.
- */
-int is_already_running() {
-    int fd = open(PID_FILE, O_RDWR | O_CREAT, 0666);
-    char pid_str[20];
-
-    if (fd < 0) {
-        perror("Failed to open PID file");
-        exit(1);
-    }
-
-    if (lockf(fd, F_TLOCK, 0) < 0) {
-        if (errno == EACCES || errno == EAGAIN) {
-            ssize_t bytes_read = read(fd, pid_str, sizeof(pid_str) - 1);
-            if (bytes_read > 0) {
-                pid_str[bytes_read] = '\0';
-                fprintf(stderr, "Another instance is already running with PID: %s", pid_str);
-            } else {
-                fprintf(stderr, "Another instance is already running, but couldn't read its PID.");
-            }
-            close(fd);
-            return 1;
-        }
-        perror("Failed to lock PID file");
-        exit(1);
-    }
-
-    ftruncate(fd, 0);
-    sprintf(pid_str, "%ld\n", (long)getpid());
-    write(fd, pid_str, strlen(pid_str));
-
-    atexit(remove_pid_file);
-
-    return 0;
-}
+    printf("Starting the program in the background as a daemon
