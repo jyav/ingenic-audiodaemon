@@ -24,9 +24,21 @@ void *audio_output_server_thread(void *arg) {
         return NULL;
     }
 
-    struct sockaddr_un addr;
+	struct sockaddr_un addr;
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
+    
+    // --- NAMESPACE FIX: Use standard filesystem sockets, NOT abstract sockets ---
+    strncpy(addr.sun_path, AUDIO_INPUT_SOCKET_PATH, sizeof(addr.sun_path) - 1);
+	
+    printf("[INFO] [AI] Attempting to bind socket\n");
+    
+    // Remove orphaned socket files from previous crashes
+    unlink(addr.sun_path); 
+
+    if (bind(sockfd, (struct sockaddr*)&addr, sizeof(sa_family_t) + strlen(addr.sun_path)) == -1) {
+
+	
     strncpy(&addr.sun_path[1], AUDIO_OUTPUT_SOCKET_PATH, sizeof(addr.sun_path) - 2);
     addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
 
