@@ -1,7 +1,7 @@
 /*
  * IMP log func header file.
  *
- * Copyright (C) 2014 Ingenic Semiconductor Co.,Ltd
+ * Copyright (C) 2014 Sigmastar Semiconductor Co.,Ltd
  */
 
 #ifndef __IMP_LOG_H__

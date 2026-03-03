@@ -7,7 +7,7 @@
 #include <getopt.h>
 #include <sys/time.h>
 
-#define SERVER_SOCKET_PATH "\0ingenic_audio" // This is an abstract socket
+#define SERVER_SOCKET_PATH "\0sigmastar_audio" // This is an abstract socket
 #define AO_TEST_SAMPLE_TIME 1  // Adding the missing definition
 #define AO_MAX_FRAME_SIZE 1280  // Adjusted for the maximum frame size
 

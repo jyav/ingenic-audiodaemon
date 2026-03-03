@@ -11,34 +11,34 @@ deps() {
 
 	echo "import libimp"
 	cd ${TOP}/3rdparty
-	rm -rf ingenic-lib
-	if [[ ! -d ingenic-lib ]]; then
-	git clone --depth 1 https://github.com/gtxaspec/ingenic-lib
+	rm -rf sigmastar-lib
+	if [[ ! -d sigmastar-lib ]]; then
+	git clone --depth 1 https://github.com/gtxaspec/sigmastar-lib
 
 	case "$1" in
 		T10)
 			echo "use T10 libs"
-			cp ingenic-lib/T10/lib/3.12.0/uclibc/4.7.2/* $TOP/3rdparty/install/lib
+			cp sigmastar-lib/T10/lib/3.12.0/uclibc/4.7.2/* $TOP/3rdparty/install/lib
 			;;
 		T20)
 			echo "use T20 libs"
-			cp ingenic-lib/T20/lib/3.12.0/uclibc/4.7.2/* $TOP/3rdparty/install/lib
+			cp sigmastar-lib/T20/lib/3.12.0/uclibc/4.7.2/* $TOP/3rdparty/install/lib
 			;;
 		T21)
 			echo "use $1 libs"
-			cp ingenic-lib/$1/lib/1.0.33/uclibc/5.4.0/* $TOP/3rdparty/install/lib
+			cp sigmastar-lib/$1/lib/1.0.33/uclibc/5.4.0/* $TOP/3rdparty/install/lib
 			;;
 		T23)
 			echo "use $1 libs"
-			cp ingenic-lib/$1/lib/1.1.0/uclibc/5.4.0/* $TOP/3rdparty/install/lib
+			cp sigmastar-lib/$1/lib/1.1.0/uclibc/5.4.0/* $TOP/3rdparty/install/lib
 			;;
 		T30)
 			echo "use $1 libs"
-			cp ingenic-lib/$1/lib/1.0.5/uclibc/5.4.0/* $TOP/3rdparty/install/lib
+			cp sigmastar-lib/$1/lib/1.0.5/uclibc/5.4.0/* $TOP/3rdparty/install/lib
 			;;
 		T31)
 			echo "use $1 libs"
-			cp ingenic-lib/$1/lib/1.1.6/uclibc/5.4.0/* $TOP/3rdparty/install/lib
+			cp sigmastar-lib/$1/lib/1.1.6/uclibc/5.4.0/* $TOP/3rdparty/install/lib
 			;;
 		*)
 			echo "Unsupported or unspecified SoC model."
@@ -50,10 +50,10 @@ deps() {
 
 	echo "import libmuslshim"
 	cd 3rdparty
-	rm -rf ingenic-musl
-	if [[ ! -d ingenic-musl ]]; then
-	git clone --depth 1 https://github.com/gtxaspec/ingenic-musl
-	cd ingenic-musl
+	rm -rf sigmastar-musl
+	if [[ ! -d sigmastar-musl ]]; then
+	git clone --depth 1 https://github.com/gtxaspec/sigmastar-musl
+	cd sigmastar-musl
 	if [[ "$2" == "-static" ]]; then
 		make CC="${CROSS_COMPILE}gcc" static
 	else

@@ -1,8 +1,8 @@
 #ifndef CLIENT_NETWORK_H
 #define CLIENT_NETWORK_H
 
-#define AUDIO_OUTPUT_SOCKET_PATH "ingenic_audio_output"
-#define AUDIO_CONTROL_SOCKET_PATH "ingenic_audio_control"
+#define AUDIO_OUTPUT_SOCKET_PATH "sigmastar_audio_output"
+#define AUDIO_CONTROL_SOCKET_PATH "sigmastar_audio_control"
 
 #define AUDIO_OUTPUT_REQUEST 2
 

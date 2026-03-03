@@ -1,4 +1,4 @@
-// --- INGENIC HEADERS REMOVED ---
+// --- SIGMASTAR HEADERS REMOVED ---
 /*
 #include "imp/imp_audio.h"
 #include "imp/imp_log.h"

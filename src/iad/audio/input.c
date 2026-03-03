@@ -5,7 +5,7 @@
 #include <pthread.h>        
 #include <string.h>
 
-// --- INGENIC HEADERS REMOVED ---
+// --- SIGMASTAR HEADERS REMOVED ---
 /*
 #include "imp/imp_audio.h"  
 #include "imp/imp_log.h"    

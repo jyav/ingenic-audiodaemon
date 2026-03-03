@@ -1,10 +1,10 @@
-# Ingenic Audio Daemon
+# Sigmastar Audio Daemon
 
-The **Ingenic Audio Daemon** (iad) serves as an intermediary between the audio kernel modules and client applications, facilitating audio input and output operations on Ingenic hardware.
+The **Sigmastar Audio Daemon** (iad) serves as an intermediary between the audio kernel modules and client applications, facilitating audio input and output operations on Sigmastar hardware.
 
-- **iad (Ingenic Audio Daemon)**: A background process for handling audio on Ingenic devices.
-  - **iac (Ingenic Audio Client)**: A client-side utility to interact with the audio daemon.
-  - **audioplay**: A standalone audio player for Ingenic devices.
+- **iad (Sigmastar Audio Daemon)**: A background process for handling audio on Sigmastar devices.
+  - **iac (Sigmastar Audio Client)**: A client-side utility to interact with the audio daemon.
+  - **audioplay**: A standalone audio player for Sigmastar devices.
   - **web_client**: A client utility that establishes a WebSocket server, enabling the capture and streaming of audio data from web browsers.
   - **wc-console**: A client tool that establishes a WebSocket server, used for audio debugging, outputting the audio stream to stdout.
 
@@ -33,7 +33,7 @@ The **Ingenic Audio Daemon** (iad) serves as an intermediary between the audio k
 Before you begin, ensure you have:
 
 - A Linux-based operating system.
-- The required cross-compilation tools for Ingenic devices.
+- The required cross-compilation tools for Sigmastar devices.
 - Git (for versioning support in the build system).
 
 ### Directory Structure
@@ -46,7 +46,7 @@ Before you begin, ensure you have:
 
 ### Compiling the Tools
 
-1. **Prepare the Environment**: Ensure you have set up the cross-compilation environment for Ingenic devices.
+1. **Prepare the Environment**: Ensure you have set up the cross-compilation environment for Sigmastar devices.
 
 2. **Clone the Repository**
 

@@ -1,5 +1,5 @@
 /*
- * INGENIC AUDIO DAEMON (SigmaStar Port)
+ * SIGMASTAR AUDIO DAEMON (SigmaStar Port)
  *
  * This daemon manages audio input and output for SigmaStar devices.
  */
@@ -28,7 +28,7 @@
 #define TAG "IAD"
 
 int main(int argc, char *argv[]) {
-    printf("INGENIC AUDIO DAEMON Version: %s\n", VERSION);
+    printf("SIGMASTAR AUDIO DAEMON Version: %s\n", VERSION);
 
     // 1. Parse command-line arguments
     CmdOptions options;

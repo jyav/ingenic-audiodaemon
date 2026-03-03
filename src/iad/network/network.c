@@ -6,9 +6,9 @@
 
 #define TAG "NET"
 
-char AUDIO_INPUT_SOCKET_PATH[32] = "ingenic_audio_input";
-char AUDIO_OUTPUT_SOCKET_PATH[32] = "ingenic_audio_output";
-char AUDIO_CONTROL_SOCKET_PATH[32] = "ingenic_audio_control";
+char AUDIO_INPUT_SOCKET_PATH[32] = "sigmastar_audio_input";
+char AUDIO_OUTPUT_SOCKET_PATH[32] = "sigmastar_audio_output";
+char AUDIO_CONTROL_SOCKET_PATH[32] = "sigmastar_audio_control";
 
 // Sample variables for testing
 int sampleVariableA = 0;

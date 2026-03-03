@@ -112,7 +112,7 @@ printf("[INFO] [AO] Waiting for output client connection\n");
         }
         active_client_sock = client_sock;
 
-        // --- INGENIC DIRTY HACK REMOVED ---
+        // --- SIGMASTAR DIRTY HACK REMOVED ---
         /*
         // Enabling the channel, after its already enabled, clears all buffers for some reason... otherwise
         // old audio will play on each subsequent client connect... unknown why.

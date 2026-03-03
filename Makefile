@@ -93,7 +93,7 @@ deps:
 
 dependancies: deps
 
-build/obj/%.o: ingenic_musl/%.c
+build/obj/%.o: sigmastar_musl/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 build/obj/%.o: src/common/%.c

@@ -13,9 +13,9 @@
       "SetVol": 10
     },
     "network": {
-      "audio_input_socket_path": "/tmp/ingenic_audio_input",
-      "audio_output_socket_path": "/tmp/ingenic_audio_output",
-      "audio_control_socket_path": "/tmp/ingenic_audio_control"
+      "audio_input_socket_path": "/tmp/sigmastar_audio_input",
+      "audio_output_socket_path": "/tmp/sigmastar_audio_output",
+      "audio_control_socket_path": "/tmp/sigmastar_audio_control"
     }
   }
 }

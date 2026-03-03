@@ -41,7 +41,7 @@ void handle_audio_input_client(int client_sock) {
     printf("[INFO] [AI] Input client connected\n");
 }
 
-    // --- INGENIC CONCURRENCY BUG REMOVED ---
+    // --- SIGMASTAR CONCURRENCY BUG REMOVED ---
     /*
     AiThreadArg thread_arg;
     thread_arg.sockfd = client_sock;

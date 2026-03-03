@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
     }
 
     if (!silent) {
-        printf("INGENIC WC-CONSOLE Version: %s\n", VERSION);
+        printf("SIGMASTAR WC-CONSOLE Version: %s\n", VERSION);
     }
 
     // Disable buffering for stdout

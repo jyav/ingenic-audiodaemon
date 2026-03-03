@@ -11,7 +11,7 @@
 #define TAG "AO_T31"
 #define AO_TEST_SAMPLE_RATE 16000
 #define AO_MAX_FRAME_SIZE 1280
-#define SERVER_SOCKET_PATH "ingenic_audio"
+#define SERVER_SOCKET_PATH "sigmastar_audio"
 #define CHN_VOL 100
 #define AO_GAIN 20
 

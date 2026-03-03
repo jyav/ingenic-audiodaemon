@@ -1,5 +1,5 @@
 /*
- * INGENIC WEBSOCKET AUDIO CLIENT
+ * SIGMASTAR WEBSOCKET AUDIO CLIENT
  */
 
 #include <signal.h>
@@ -168,7 +168,7 @@ int main(int argc, char *argv[]) {
     signal(SIGPIPE, SIG_IGN);
 
     if (!silent) {
-        printf("INGENIC WEB AUDIO CLIENT Version: %s\n", VERSION);
+        printf("SIGMASTAR WEB AUDIO CLIENT Version: %s\n", VERSION);
         if (!debug) {
             lws_set_log_level(0, NULL);
         }

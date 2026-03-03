@@ -8,7 +8,7 @@
 #include "mi_sys.h"
 
 // --- FIX REDUNDANT MACROS FROM audio_common.h ---
-// We must undefine the sloppy Ingenic defaults inherited from audio_common.h
+// We must undefine the sloppy Sigmastar defaults inherited from audio_common.h
 // to ensure the compiler strictly honors our SigmaStar hardware constraints.
 #undef DEFAULT_AI_SAMPLE_RATE
 #undef DEFAULT_AI_CHN_VOL

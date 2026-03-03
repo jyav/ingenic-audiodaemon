@@ -1,4 +1,4 @@
-/* INGENIC AUDIO CLIENT */
+/* SIGMASTAR AUDIO CLIENT */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
     int output_to_stdout = 0;
     int request_type;
 
-    printf("INGENIC AUDIO CLIENT Version: %s\n", VERSION);
+    printf("SIGMASTAR AUDIO CLIENT Version: %s\n", VERSION);
 
     if (parse_arguments(argc, argv, &use_stdin, &audio_file_path, &record_audio, &output_to_stdout) != 0) {
         exit(1);

@@ -13,12 +13,12 @@
 
 ## Overview
 
-`web_client` is an `iad` client designed for the capture and streaming of audio data from web browsers. By establishing a WebSocket server, it serves as a bridge, allowing web clients and backend systems to transfer audio data in real-time to the Ingenic Audio Daemon.
+`web_client` is an `iad` client designed for the capture and streaming of audio data from web browsers. By establishing a WebSocket server, it serves as a bridge, allowing web clients and backend systems to transfer audio data in real-time to the Sigmastar Audio Daemon.
 
 ## Features
 
 - **WebSocket Server**: Sets up a WebSocket server to handle incoming audio.
-- **Audio Capture to iad**: Designed to capture audio from browsers and directly stream the data to the Ingenic Audio Daemon (`iad`).
+- **Audio Capture to iad**: Designed to capture audio from browsers and directly stream the data to the Sigmastar Audio Daemon (`iad`).
 - **IPv4 & IPv6 Support**: Dual-stack support ensures compatibility with both IPv4 and IPv6 network configurations.
 - **Custom IP & Port Configuration**: By default, it listens on the local IP and port 8089, but offers flexibility with custom IP addresses and ports.
 - **libwebsockets Integration**: Utilizes the robust `libwebsockets` library to manage WebSocket connections and data transfer.

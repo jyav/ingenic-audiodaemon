@@ -1,4 +1,4 @@
-/* AUDIO PLAY FOR INGENIC, BASED OFF SAMPLES */
+/* AUDIO PLAY FOR SIGMASTAR, BASED OFF SAMPLES */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +29,7 @@ typedef struct {
 
 /* Display the usage of the program */
 void usage() {
-    printf("AUDIOPLAY for INGENIC\n");
+    printf("AUDIOPLAY for SIGMASTAR\n");
     printf("Info: 16khz, raw pcm_s16le, mono format supported.\n");
     printf("Usage: audioplay_t31 [-s|--stdin] <file> <vol 0-100> <gain> \n");
     printf("       -s, --stdin: Read audio data from stdin\n");
@@ -57,7 +57,7 @@ int handle_audio_error(const char *msg) {
 }
 
 void *ao_test_play_thread(void *arg) {
-    IMP_LOG_INFO(TAG, "Starting AUDIOPLAY for INGENIC\n");
+    IMP_LOG_INFO(TAG, "Starting AUDIOPLAY for SIGMASTAR\n");
     AudioConfig *config = (AudioConfig *)arg;
 
     unsigned char *buf = (unsigned char *)malloc(AO_TEST_BUF_SIZE);
@@ -122,7 +122,7 @@ int ao_basic_test(AudioConfig *config) {
 }
 
 int main(int argc, char *argv[]) {
-    printf("INGENIC AUDIOPLAY_T31 Version: %s\n", VERSION);
+    printf("SIGMASTAR AUDIOPLAY_T31 Version: %s\n", VERSION);
 
     if (argc < 2) usage();
 

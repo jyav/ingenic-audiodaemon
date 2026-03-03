@@ -1,7 +1,7 @@
 /*
  * IMP System header file.
  *
- * Copyright (C) 2014 Ingenic Semiconductor Co.,Ltd
+ * Copyright (C) 2014 Sigmastar Semiconductor Co.,Ltd
  */
 
 #ifndef __IMP_SYSTEM_H__
@@ -20,7 +20,7 @@ extern "C"
  */
 
 /**
- * @defgroup imp IMP(Ingenic Media Platform)
+ * @defgroup imp IMP(Sigmastar Media Platform)
  */
 
 /**
