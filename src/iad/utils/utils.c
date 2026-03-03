@@ -12,6 +12,7 @@
 #include "config.h"
 #include "output.h"
 #include "input.h"
+#include "mi_sys.h"
 
 #define PID_FILE "/var/run/iad.pid"
 
@@ -105,6 +106,9 @@ void perform_cleanup() {
     disable_audio_input();
     disable_audio_output();
 
+    // --- SIGMASTAR TEARDOWN ADDED ---
+    MI_SYS_Exit(); // Destroy the memory pool ONLY after disabling the I/O
+    
     config_cleanup();
 }
 
