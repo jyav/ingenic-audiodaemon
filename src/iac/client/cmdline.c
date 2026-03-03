@@ -7,6 +7,10 @@ void print_usage(char *program_name) {
     printf("Usage: %s [options]\n\n", program_name);
     printf("Options:\n");
     printf("  -f <path>   Specify the path to an audio file to play\n");
+    
+    // --- SIGMASTAR REQUIREMENT DOCUMENTATION ADDED ---
+    printf("              (MUST BE: 16000Hz, 16-bit, Mono, RAW PCM / S16_LE)\n");
+    
     printf("  -s          Use stdin for audio input\n");
     printf("  -r <path>   Record audio to given file path\n");
     printf("  -o          Output recorded audio to stdout\n");
