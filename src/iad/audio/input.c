@@ -129,18 +129,25 @@ void *ai_record_thread(void *arg) {
 
             ClientNode *current = client_list_head;
             while (current) {
-                ssize_t wr_sock = write(current->sockfd, stAiChFrame.apVirAddr[0], stAiChFrame.u32Len);
+                // --- HARDWARE STALL FIX: Use non-blocking MSG_DONTWAIT ---
+                ssize_t wr_sock = send(current->sockfd, stAiChFrame.apVirAddr[0], stAiChFrame.u32Len, MSG_DONTWAIT);
                 
                 if (wr_sock < 0) {
-                    if (errno == EPIPE) {
-                        printf("[INFO] Client disconnected\n");
-                    } else {
-                        handle_audio_error("AI: write to sockfd");
+                    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                        // Client is reading too slowly. Buffer is full.
+                        // Drop this frame for this client to prevent halting the SigmaStar DMA.
+                        current = current->next;
+                        continue;
                     }
                     
-                    // --- FD LEAK FIX ADDED ---
+                    if (errno == EPIPE || errno == ECONNRESET) {
+                        printf("[INFO] Client disconnected\n");
+                    } else {
+                        handle_audio_error("AI: send to sockfd");
+                    }
+                    
                     // The socket must be closed at the OS level before we free the memory node
-                    close(current->sockfd);
+                    close(current->sockfd); 
                     
                     if (current == client_list_head) {
                         client_list_head = current->next;
@@ -160,7 +167,6 @@ void *ai_record_thread(void *arg) {
                 current = current->next;
             }
             pthread_mutex_unlock(&client_list_lock);
-
             MI_AI_ReleaseFrame(aiDevID, aiChnID, &stAiChFrame, &stAecFrame);
         } else {
             // If the hardware drops or is being disabled, sleep 10ms to prevent a 100% CPU lockup
