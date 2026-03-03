@@ -61,7 +61,24 @@ void *audio_output_server_thread(void *arg) {
         }
 
 printf("[INFO] [AO] Waiting for output client connection\n");
-        int client_sock = accept(sockfd, NULL, NULL);
+        // --- DEADLOCK FIX: Use select() to allow periodic g_stop_thread checks ---
+        fd_set readfds;
+        struct timeval tv;
+        FD_ZERO(&readfds);
+        FD_SET(sockfd, &readfds);
+        tv.tv_sec = 1; // 1-second timeout
+        tv.tv_usec = 0;
+
+        int ret = select(sockfd + 1, &readfds, NULL, NULL, &tv);
+        if (ret < 0) {
+            handle_audio_error(TAG, "select");
+            break;
+        } else if (ret == 0) {
+            // Timeout occurred. Loop around to evaluate g_stop_thread.
+            continue;
+        }
+		
+		int client_sock = accept(sockfd, NULL, NULL);
         if (client_sock == -1) {
             handle_audio_error(TAG, "accept");
             continue;
