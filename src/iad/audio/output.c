@@ -198,7 +198,7 @@ int disable_audio_output() {
     int aoDevID, aoChnID;
     get_audio_output_device_attributes(&aoDevID, &aoChnID);
 
-    int mute_status = 0;
+    int mute_status = 1;
     mute_audio_output_device(mute_status);
 
     ret = MI_AO_DisableVqe(aoDevID, aoChnID);
