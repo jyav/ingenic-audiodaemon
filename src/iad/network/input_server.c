@@ -65,7 +65,7 @@ void *audio_input_server_thread(void *arg) {
 
     /*
     if (initialize_audio_input_device(aiDevID, aiChnID) != 0) {
-        fprintf(stderr, "[ERROR] Failed to initialize audio input device\n");
+        f(stderr, "[ERROR] Failed to initialize audio input device\n");
         return NULL;
     }
     */
@@ -74,7 +74,7 @@ void *audio_input_server_thread(void *arg) {
     // We spawn the hardware capture thread EXACTLY ONCE here.
     pthread_t hw_ai_thread;
     if (pthread_create(&hw_ai_thread, NULL, ai_record_thread, NULL) != 0) {
-        fprintf(stderr, "[FATAL] Failed to spawn SigmaStar AI hardware thread\n");
+        f(stderr, "[FATAL] Failed to spawn SigmaStar AI hardware thread\n");
         return NULL;
     }
     pthread_detach(hw_ai_thread);
@@ -93,22 +93,22 @@ void *audio_input_server_thread(void *arg) {
     strncpy(&addr.sun_path[1], AUDIO_INPUT_SOCKET_PATH, sizeof(addr.sun_path) - 2);
     addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
 
-    printf("[INFO] [AI] Attempting to bind socket\n");
+    ("[INFO] [AI] Attempting to bind socket\n");
     if (bind(sockfd, (struct sockaddr*)&addr, sizeof(sa_family_t) + strlen(AUDIO_INPUT_SOCKET_PATH) + 1) == -1) {
         handle_audio_error(TAG, "bind failed");
         close(sockfd);
         return NULL;
     } else {
-        printf("[INFO] [AI] Bind to input socket succeeded\n");
+        ("[INFO] [AI] Bind to input socket succeeded\n");
     }
 
-    printf("[INFO] [AI] Attempting to listen on socket\n");
+    ("[INFO] [AI] Attempting to listen on socket\n");
     if (listen(sockfd, 5) == -1) {
         handle_audio_error(TAG, "listen");
         close(sockfd);
         return NULL;
     } else {
-        printf("[INFO] [AI] Listening on input socket\n");
+        ("[INFO] [AI] Listening on input socket\n");
     }
 
     while (1) {
@@ -120,6 +120,23 @@ void *audio_input_server_thread(void *arg) {
         if (should_stop) break;
 
         printf("[INFO] [AI] Waiting for input client connection\n");
+        // --- DEADLOCK FIX: Use select() to allow periodic g_stop_thread checks ---
+        fd_set readfds;
+        struct timeval tv;
+        FD_ZERO(&readfds);
+        FD_SET(sockfd, &readfds);
+        tv.tv_sec = 1; // 1-second timeout
+        tv.tv_usec = 0;
+
+        int ret = select(sockfd + 1, &readfds, NULL, NULL, &tv);
+        if (ret < 0) {
+            handle_audio_error(TAG, "select");
+            break;
+        } else if (ret == 0) {
+            // Timeout occurred. Loop around to evaluate g_stop_thread.
+            continue;
+        }
+        
         int client_sock = accept(sockfd, NULL, NULL);
         if (client_sock == -1) {
             handle_audio_error(TAG, "accept");
