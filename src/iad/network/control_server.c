@@ -94,45 +94,55 @@ void *audio_control_server_thread(void *arg) {
     struct sockaddr_un addr;
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
-    strncpy(&addr.sun_path[1], AUDIO_CONTROL_SOCKET_PATH, sizeof(addr.sun_path) - 2);
-    addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
+    
+    // --- NAMESPACE FIX: Use standard filesystem sockets ---
+    strncpy(addr.sun_path, AUDIO_CONTROL_SOCKET_PATH, sizeof(addr.sun_path) - 1);
 
-    printf("[INFO] [CTRL] Attempting to bind control socket\n");
-    if (bind(sockfd, (struct sockaddr*)&addr, sizeof(sa_family_t) + strlen(AUDIO_CONTROL_SOCKET_PATH) + 1) == -1) {
+    printf("[INFO] Attempting to bind control socket\n");
+    unlink(addr.sun_path); // Clear orphaned sockets
+
+    if (bind(sockfd, (struct sockaddr*)&addr, sizeof(sa_family_t) + strlen(addr.sun_path)) == -1) {
         handle_audio_error(TAG, "bind failed");
         close(sockfd);
         return NULL;
     }
-    else {
-        printf("[INFO] [CTRL] Bind to control socket succeeded\n");
-    }
 
-    printf("[INFO] [CTRL] Attempting to listen on control socket\n");
     if (listen(sockfd, 5) == -1) {
         handle_audio_error(TAG, "listen");
         close(sockfd);
         return NULL;
     }
-    else {
-        printf("[INFO] [CTRL] Listening on control socket\n");
-    }
 
     while (1) {
-        int should_stop = 0;
-        pthread_mutex_lock(&g_stop_thread_mutex);
-        should_stop = g_stop_thread;
-        pthread_mutex_unlock(&g_stop_thread_mutex);
+        // --- DEADLOCK FIX: Use select() to allow periodic g_stop_thread checks ---
+        fd_set readfds;
+        struct timeval tv;
+        FD_ZERO(&readfds);
+        FD_SET(sockfd, &readfds);
+        tv.tv_sec = 1; 
+        tv.tv_usec = 0;
 
-        if (should_stop) {
+        int ret = select(sockfd + 1, &readfds, NULL, NULL, &tv);
+        if (ret < 0) {
+            handle_audio_error(TAG, "select");
             break;
+        } else if (ret == 0) {
+            int stop = 0;
+            pthread_mutex_lock(&g_stop_thread_mutex);
+            stop = g_stop_thread;
+            pthread_mutex_unlock(&g_stop_thread_mutex);
+            if (stop) break;
+            continue;
         }
 
-        printf("[INFO] [CTRL] Waiting for a control client connection\n");
         int client_sock = accept(sockfd, NULL, NULL);
         if (client_sock == -1) {
             handle_audio_error(TAG, "accept");
             continue;
         }
+    
+    close(sockfd);
+    return NULL;
         handle_control_client(client_sock);
     }
 
