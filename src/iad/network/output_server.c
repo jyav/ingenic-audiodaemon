@@ -170,6 +170,13 @@ printf("[INFO] [AO] Waiting for output client connection\n");
 	//clear_audio_output_buffer();
     }
 
-    close(sockfd);
+    // --- SHUTDOWN DEADLOCK FIX: Force wake the playback thread ---
+    // If the daemon is idle, ao_play_thread is asleep forever. We must wake it 
+    // up so it can see g_stop_thread=1 and cleanly exit.
+    pthread_mutex_lock(&audio_buffer_lock);
+    pthread_cond_broadcast(&audio_data_cond);
+    pthread_mutex_unlock(&audio_buffer_lock);
+	
+	close(sockfd);
     return NULL;
 }
