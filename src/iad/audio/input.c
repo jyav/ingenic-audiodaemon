@@ -119,8 +119,8 @@ void *ai_record_thread(void *arg) {
         memset(&stAiChFrame, 0, sizeof(MI_AUDIO_Frame_t));
         memset(&stAecFrame, 0, sizeof(MI_AUDIO_AecFrame_t));
         
-        if (MI_AI_GetFrame(aiDevID, aiChnID, &stAiChFrame, &stAecFrame, -1) == 0) {
-            
+        // --- KERNEL DEADLOCK FIX: Use 200ms timeout instead of -1 (infinite) ---
+        if (MI_AI_GetFrame(aiDevID, aiChnID, &stAiChFrame, &stAecFrame, 200) == 0) {
             // --- SIGMASTAR FIX: USE ISOLATED MUTEX ---
             pthread_mutex_lock(&client_list_lock);
 
@@ -180,23 +180,25 @@ void *ai_record_thread(void *arg) {
 int disable_audio_input() {
     int aiDevID, aiChnID;
     get_audio_input_device_attributes(&aiDevID, &aiChnID);
+    
+    int ret_val = 0; // Track errors but do not abort
 
     if (MI_AI_DisableVqe(aiDevID, aiChnID) != 0) {
         printf("[ERROR] [%s] SigmaStar audio VQE disable error\n", TAG);
-        return -1;
+        ret_val = -1;
     }
-    
+
     if (MI_AI_DisableChn(aiDevID, aiChnID) != 0) {
         printf("[ERROR] [%s] SigmaStar audio channel disable error\n", TAG);
-        return -1;
+        ret_val = -1;
     }
 
     if (MI_AI_Disable(aiDevID) != 0) {
         printf("[ERROR] [%s] SigmaStar audio device disable error\n", TAG);
-        return -1;
+        ret_val = -1;
     }
 
-    MI_AI_ClrPubAttr(aiDevID); // FIXED: Prevent kernel lock on daemon restart
-    
-    return 0;
+    MI_AI_ClrPubAttr(aiDevID); // FIXED: Guaranteed to run
+    return ret_val;
+
 }
