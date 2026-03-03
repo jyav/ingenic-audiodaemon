@@ -77,16 +77,11 @@ int initialize_audio_input_device(int aiDevID, int aiChnID) {
     stAiVqe.s32FrameSample = 128; // Strict SigmaStar VQE requirement
 
     // Configure AGC (Auto Gain Control) mapped to standard telecom curves
-    stAiVqe.stAgcCfg.eMode = E_MI_AUDIO_ALGORITHM_MODE_USER;
-    stAiVqe.stAgcCfg.s32TargetLevelDb = -3;
-    stAiVqe.stAgcCfg.s32NoiseGateDb = -60;
-    stAiVqe.stAgcCfg.stAgcGainInfo.s32GainMax = 20;
-
+    stAiVqe.stAgcCfg.eMode = E_MI_AUDIO_ALGORITHM_MODE_DEFAULT; // FIXED
+    
     // Configure ANR (Acoustic Noise Reduction)
-    stAiVqe.stAnrCfg.eMode = E_MI_AUDIO_ALGORITHM_MODE_USER;
-    stAiVqe.stAnrCfg.u32NrIntensity = 20; 
-    stAiVqe.stAnrCfg.eNrSpeed = E_MI_AUDIO_NR_SPEED_MID;
-
+    stAiVqe.stAnrCfg.eMode = E_MI_AUDIO_ALGORITHM_MODE_DEFAULT; // FIXED
+    
     // 4. THE AEC BINDING (CRITICAL)
     // We bind the microphone's echo canceller directly to the Speaker Output (AO)
     // using the defaults established in output.h
