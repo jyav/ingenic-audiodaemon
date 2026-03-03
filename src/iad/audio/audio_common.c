@@ -81,6 +81,7 @@ AudioInputAttributes get_audio_input_attributes() {
  * @param attrs Pointer to the audio input attributes structure.
  */
 void free_audio_input_attributes(AudioInputAttributes *attrs) {
+    /* 
     cJSON_Delete(attrs->samplerateItem);
     cJSON_Delete(attrs->bitwidthItem);
     cJSON_Delete(attrs->soundmodeItem);
@@ -89,6 +90,7 @@ void free_audio_input_attributes(AudioInputAttributes *attrs) {
     cJSON_Delete(attrs->SetVolItem);
     cJSON_Delete(attrs->SetGainItem);
     cJSON_Delete(attrs->usrFrmDepthItem);
+    */
 }
 
 /**
@@ -112,6 +114,7 @@ AudioOutputAttributes get_audio_attributes() {
  * @param attrs Pointer to the audio output attributes structure.
  */
 void free_audio_output_attributes(AudioOutputAttributes *attrs) {
+    /*
     cJSON_Delete(attrs->samplerateItem);
     cJSON_Delete(attrs->bitwidthItem);
     cJSON_Delete(attrs->soundmodeItem);
@@ -119,6 +122,7 @@ void free_audio_output_attributes(AudioOutputAttributes *attrs) {
     cJSON_Delete(attrs->chnCntItem);
     cJSON_Delete(attrs->SetVolItem);
     cJSON_Delete(attrs->SetGainItem);
+    */
 }
 
 /**
