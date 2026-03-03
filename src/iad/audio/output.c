@@ -128,6 +128,7 @@ void cleanup_audio_output() {
  * @param aoChnID Channel ID.
  */
 void reinitialize_audio_output_device(int aoDevID, int aoChnID) {
+    MI_AO_DisableVqe(aoDevID, aoChnID);
     MI_AO_DisableChn(aoDevID, aoChnID);
     MI_AO_Disable(aoDevID);
     initialize_audio_output_device(aoDevID, aoChnID);
