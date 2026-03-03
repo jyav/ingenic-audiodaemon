@@ -133,6 +133,7 @@ void reinitialize_audio_output_device(int aoDevID, int aoChnID) {
     MI_AO_DisableVqe(aoDevID, aoChnID);
     MI_AO_DisableChn(aoDevID, aoChnID);
     MI_AO_Disable(aoDevID);
+    MI_AO_ClrPubAttr(aoDevID); // FIXED: Wipe kernel state to allow SetPubAttr to succeed
     initialize_audio_output_device(aoDevID, aoChnID);
 }
 
@@ -227,6 +228,8 @@ int disable_audio_output() {
         return -1;
     }
 
+    MI_AO_ClrPubAttr(aoDevID); // FIXED: Prevent kernel lock on daemon restart
+    
     cleanup_audio_output();
 
     return 0;
