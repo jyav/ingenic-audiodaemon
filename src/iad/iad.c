@@ -61,7 +61,11 @@ int main(int argc, char *argv[]) {
     signal(SIGPIPE, SIG_IGN);
 
     printf("[INFO] Starting audio daemon\n");
-    MI_SYS_Init();
+    // --- SIGMASTAR INITIALIZATION ADDED ---
+    if (MI_SYS_Init() != 0) {
+        printf("[FATAL] Failed to initialize SigmaStar MI_SYS memory pool.\n");
+        exit(EXIT_FAILURE);
+    }
 
     char *config_file_path = options.config_file_path;
     int disable_ai = options.disable_ai;
