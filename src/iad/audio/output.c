@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h> // Required for memset
+#include <unistd.h>
 
 // --- SIGMASTAR HEADERS ADDED ---
 #include "mi_sys.h"
