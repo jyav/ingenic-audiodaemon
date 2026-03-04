@@ -5,7 +5,8 @@
 
 // -----------------------------
 // Configuration Handling Functions
-// -----------------------------#ifndef UTILS_H
+// -----------------------------
+#ifndef UTILS_H
 #define UTILS_H
 
 // Required headers for thread management and data types
