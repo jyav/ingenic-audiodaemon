@@ -5,9 +5,6 @@
 #include <pthread.h>
 #include <sys/types.h>      // For ssize_t
 
-// Audio headers for handling audio data and configurations
-#include "imp/imp_audio.h"  // For IMPAudioBitWidth, IMPAudioSoundMode
-
 // Constants for program tagging and frame duration
 #define PROG_TAG "AO_T31"
 #define FRAME_DURATION 0.040
