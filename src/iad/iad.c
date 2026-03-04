@@ -5,27 +5,29 @@
  */
 
 #if !defined(__UCLIBC__) && !defined(__GLIBC__)
-#include <bits/signal.h>             
+#include <bits/signal.h>
 #endif
-
-#include <signal.h>                  
-#include <stdio.h>                   
+#include <signal.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>                 
+#include <pthread.h>
 
 #include "mi_sys.h"
 #include "iad.h"
-#include "network/input_server.h"    
-#include "network/output_server.h"   
-#include "network/control_server.h"  
-#include "audio/output.h"            
-#include "utils/cmdline.h"           
-#include "utils/config.h"            
-#include "utils/utils.h"             
-#include "utils/logging.h"           
-#include "version.h"                 
+#include "network/input_server.h"
+#include "network/output_server.h"
+#include "network/control_server.h"
+#include "audio/output.h"
+#include "utils/cmdline.h"
+#include "utils/config.h"
+#include "utils/utils.h"
+#include "utils/logging.h"
+#include "version.h"
 
 #define TAG "IAD"
+
+// --- DEADLOCK FIX: Expose the backpressure condition variable for emergency aborts ---
+extern pthread_cond_t audio_free_cond;
 
 int main(int argc, char *argv[]) {
     printf("SIGMASTAR AUDIO DAEMON Version: %s\n", VERSION);
@@ -48,7 +50,7 @@ int main(int argc, char *argv[]) {
     signal(SIGPIPE, SIG_IGN);
 
     // 2. LOAD CONFIGURATION FIRST
-    // We must load JSON before touching any hardware, as the hardware 
+    // We must load JSON before touching any hardware, as the hardware
     // initialization routines depend on the parsed attributes.
     char *config_file_path = options.config_file_path;
     int disable_ai = options.disable_ai;
@@ -99,11 +101,17 @@ int main(int argc, char *argv[]) {
     // Tracking flags to prevent joining uninitialized threads
     int control_up = 0, input_up = 0, output_up = 0, play_up = 0;
 
-    // --- BOOT DEADLOCK FIX: Signal threads to abort if a sibling fails to spawn ---
+    // --- BOOT DEADLOCK FIX: Signal threads to abort AND explicitly wake them ---
     #define ABORT_STARTUP() do { \
         pthread_mutex_lock(&g_stop_thread_mutex); \
         g_stop_thread = 1; \
         pthread_mutex_unlock(&g_stop_thread_mutex); \
+        \
+        pthread_mutex_lock(&audio_buffer_lock); \
+        pthread_cond_broadcast(&audio_data_cond); \
+        pthread_cond_broadcast(&audio_free_cond); \
+        pthread_mutex_unlock(&audio_buffer_lock); \
+        \
         exit_code = 1; \
         goto join_threads; \
     } while(0)
@@ -128,6 +136,7 @@ int main(int argc, char *argv[]) {
         } else {
             ABORT_STARTUP();
         }
+
         if (create_thread(&play_thread_id, ao_play_thread, NULL) == 0) {
             play_up = 1;
         } else {
@@ -141,10 +150,14 @@ join_threads:
     if (input_up) pthread_join(input_server_thread, NULL);
     if (output_up) pthread_join(output_server_thread, NULL);
     if (play_up) pthread_join(play_thread_id, NULL);
-    
+
 cleanup:
     // Execute global teardown sequence
     perform_cleanup();
+    
+    // --- KERNEL LEAK FIX: Unmap SigmaStar memory pool ---
+    MI_SYS_Exit(); 
+    
     printf("[INFO] Audio daemon exited safely.\n");
     return exit_code;
 }
