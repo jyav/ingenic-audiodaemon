@@ -96,20 +96,14 @@ dependancies: deps
 # Force version.h to generate BEFORE compiling any C files in parallel builds
 $(iad_OBJS) $(iac_OBJS) $(web_client_OBJS) $(wc_console_OBJS): version
 
-build/obj/%.o: sigmastar_musl/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-build/obj/%.o: src/common/%.c
-	@mkdir -p $(@D)
-	$(CC) -c $(CFLAGS) $< -o $@
-
+# Simplified recursive object rule
 build/obj/%.o: src/iad/%.c
 	@mkdir -p $(@D)
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 build/obj/%.o: src/iac/%.c
 	@mkdir -p $(@D)
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 build/obj/%.o: src/web_client/%.c
 	@mkdir -p $(@D)
