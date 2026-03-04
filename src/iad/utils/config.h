@@ -202,4 +202,4 @@ int is_valid_samplerate(int samplerate);
  */
 int validate_json(cJSON *root);
 
-#endif // CONFIG_H
+#endif CONFIG_H
