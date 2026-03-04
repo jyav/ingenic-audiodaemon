@@ -20,6 +20,7 @@ extern pthread_mutex_t g_stop_thread_mutex;
 
 // --- INITIALIZE THE DEDICATED LOCK ---
 pthread_mutex_t client_list_lock = PTHREAD_MUTEX_INITIALIZER;
+ClientNode *client_list_head = NULL;
 
 void handle_audio_input_client(int client_sock) {
     // --- SIGMASTAR FIX: USE ISOLATED MUTEX ---
@@ -40,21 +41,6 @@ void handle_audio_input_client(int client_sock) {
     pthread_mutex_unlock(&client_list_lock);
     printf("[INFO] [AI] Input client connected\n");
 }
-
-    // --- SIGMASTAR CONCURRENCY BUG REMOVED ---
-    /*
-    AiThreadArg thread_arg;
-    thread_arg.sockfd = client_sock;
-    pthread_t ai_thread;
-    if (pthread_create(&ai_thread, NULL, ai_record_thread, &thread_arg) != 0) {
-        handle_audio_error(TAG, "pthread_create");
-        close(client_sock);
-        free(new_client);
-    } else {
-        pthread_detach(ai_thread);
-    }
-    */
-    // (We no longer spawn the hardware thread per client. It is running globally.)
 }
 
 void *audio_input_server_thread(void *arg) {
