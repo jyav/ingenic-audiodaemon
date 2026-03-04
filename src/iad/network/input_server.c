@@ -171,8 +171,3 @@ void *audio_input_server_thread(void *arg) {
     unlink(AUDIO_INPUT_SOCKET_PATH); // --- HYGIENE FIX: Remove the socket file ---
     return NULL;
 }
-
-    close(sockfd);
-    unlink(AUDIO_INPUT_SOCKET_PATH); // Clean up the filesystem
-    return NULL;
-}
