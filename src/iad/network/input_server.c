@@ -104,6 +104,12 @@ void *audio_input_server_thread(void *arg) {
     pthread_t hw_ai_thread;
     if (pthread_create(&hw_ai_thread, NULL, ai_record_thread, NULL) != 0) {
         fprintf(stderr, "[FATAL] Failed to spawn SigmaStar AI hardware thread\n");
+        
+        // --- DAEMON DEADLOCK FIX: Trigger global shutdown ---
+        pthread_mutex_lock(&g_stop_thread_mutex);
+        g_stop_thread = 1;
+        pthread_mutex_unlock(&g_stop_thread_mutex);
+        
         close(sockfd);
         return NULL;
     }
