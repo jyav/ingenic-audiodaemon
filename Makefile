@@ -97,13 +97,20 @@ dependancies: deps
 $(iad_OBJS) $(iac_OBJS) $(web_client_OBJS) $(wc_console_OBJS): version
 
 # Simplified recursive object rule
+build/obj/%.o: sigmastar_musl/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+build/obj/%.o: src/common/%.c
+	@mkdir -p $(@D)
+	$(CC) -c $(CFLAGS) $< -o $@
+
 build/obj/%.o: src/iad/%.c
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 build/obj/%.o: src/iac/%.c
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 build/obj/%.o: src/web_client/%.c
 	@mkdir -p $(@D)
