@@ -134,6 +134,7 @@ void *audio_input_server_thread(void *arg) {
 
         int ret = select(sockfd + 1, &readfds, NULL, NULL, &tv);
         if (ret < 0) {
+            if (errno == EINTR) continue; // Ignore harmless OS interrupts
             handle_audio_error(TAG, "select");
             break;
         } else if (ret == 0) {
@@ -144,6 +145,7 @@ void *audio_input_server_thread(void *arg) {
         int client_sock = accept(sockfd, NULL, NULL);
         if (client_sock == -1) {
             handle_audio_error(TAG, "accept");
+            usleep(10000); // 10ms backoff to prevent tight CPU spinning
             continue;
         }
 
@@ -171,5 +173,6 @@ void *audio_input_server_thread(void *arg) {
 }
 
     close(sockfd);
+    unlink(AUDIO_INPUT_SOCKET_PATH); // Clean up the filesystem
     return NULL;
 }
