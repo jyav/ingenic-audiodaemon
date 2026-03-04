@@ -12,6 +12,7 @@
 #include "config.h"
 #include "logging.h"
 #include "output.h"
+#include "cJSON.h" // Explicitly included for cJSON_IsNumber
 
 #define TAG "AUDIO_COMMON"
 
@@ -25,15 +26,8 @@ static cJSON* get_audio_device_attribute(AudioType type, const char *attr) {
     return get_audio_attribute(type, attr);
 }
 
-/**
- * Helper function to free the memory for a specific audio attribute.
- * @param item The cJSON item to be freed.
- */
-static __attribute__((unused)) void free_audio_device_attribute(cJSON *item) {
-    if (item) {
-        cJSON_Delete(item);
-    }
-}
+// FIXED: Removed the dangerous free_audio_device_attribute function. 
+// cJSON child nodes must never be deleted individually while the master config tree is active.
 
 /**
  * Retrieves the device and channel IDs for audio input or uses defaults.
@@ -43,8 +37,10 @@ static __attribute__((unused)) void free_audio_device_attribute(cJSON *item) {
 void get_audio_input_device_attributes(int *aiDevID, int *aiChnID) {
     cJSON *aiDevIDItem = get_audio_device_attribute(AUDIO_INPUT, "device_id");
     cJSON *aiChnIDItem = get_audio_device_attribute(AUDIO_INPUT, "channel_id");
-    *aiDevID = aiDevIDItem ? aiDevIDItem->valueint : DEFAULT_AI_DEV_ID;
-    *aiChnID = aiChnIDItem ? aiChnIDItem->valueint : DEFAULT_AI_CHN_ID;
+
+    // FIXED: Strict type-checking prevents union memory corruption if user supplies strings
+    *aiDevID = (aiDevIDItem && cJSON_IsNumber(aiDevIDItem)) ? aiDevIDItem->valueint : DEFAULT_AI_DEV_ID;
+    *aiChnID = (aiChnIDItem && cJSON_IsNumber(aiChnIDItem)) ? aiChnIDItem->valueint : DEFAULT_AI_CHN_ID;
 }
 
 /**
@@ -55,8 +51,10 @@ void get_audio_input_device_attributes(int *aiDevID, int *aiChnID) {
 void get_audio_output_device_attributes(int *aoDevID, int *aoChnID) {
     cJSON *aoDevIDItem = get_audio_device_attribute(AUDIO_OUTPUT, "device_id");
     cJSON *aoChnIDItem = get_audio_device_attribute(AUDIO_OUTPUT, "channel_id");
-    *aoDevID = aoDevIDItem ? aoDevIDItem->valueint : DEFAULT_AO_DEV_ID;
-    *aoChnID = aoChnIDItem ? aoChnIDItem->valueint : DEFAULT_AO_CHN_ID;
+
+    // FIXED: Strict type-checking prevents union memory corruption if user supplies strings
+    *aoDevID = (aoDevIDItem && cJSON_IsNumber(aoDevIDItem)) ? aoDevIDItem->valueint : DEFAULT_AO_DEV_ID;
+    *aoChnID = (aoChnIDItem && cJSON_IsNumber(aoChnIDItem)) ? aoChnIDItem->valueint : DEFAULT_AO_CHN_ID;
 }
 
 /**
@@ -66,118 +64,14 @@ void get_audio_output_device_attributes(int *aoDevID, int *aoChnID) {
 AudioInputAttributes get_audio_input_attributes() {
     AudioInputAttributes attrs;
     attrs.samplerateItem = get_audio_attribute(AUDIO_INPUT, "sample_rate");
-    attrs.bitwidthItem = get_audio_attribute(AUDIO_INPUT, "bitwidth");
-    attrs.soundmodeItem = get_audio_attribute(AUDIO_INPUT, "soundmode");
-    attrs.frmNumItem = get_audio_attribute(AUDIO_INPUT, "frmNum");
-    attrs.chnCntItem = get_audio_attribute(AUDIO_INPUT, "chnCnt");
-    attrs.SetVolItem = get_audio_attribute(AUDIO_INPUT, "SetVol");
-    attrs.SetGainItem = get_audio_attribute(AUDIO_INPUT, "SetGain");
-    attrs.usrFrmDepthItem = get_audio_attribute(AUDIO_INPUT, "usrFrmDepth");
+    attrs.bitwidthItem   = get_audio_attribute(AUDIO_INPUT, "bitwidth");
+    attrs.soundmodeItem  = get_audio_attribute(AUDIO_INPUT, "soundmode");
+    attrs.frmNumItem     = get_audio_attribute(AUDIO_INPUT, "frmNum");
+    attrs.chnCntItem     = get_audio_attribute(AUDIO_INPUT, "chnCnt");
+    attrs.SetVolItem     = get_audio_attribute(AUDIO_INPUT, "SetVol");
+    attrs.SetGainItem    = get_audio_attribute(AUDIO_INPUT, "SetGain");
+    attrs.usrFrmDepthItem= get_audio_attribute(AUDIO_INPUT, "usrFrmDepth");
     return attrs;
 }
 
 /**
- * Frees the memory allocated for the audio input attributes.
- * @param attrs Pointer to the audio input attributes structure.
- */
-void free_audio_input_attributes(AudioInputAttributes *attrs) {
-    /* 
-    cJSON_Delete(attrs->samplerateItem);
-    cJSON_Delete(attrs->bitwidthItem);
-    cJSON_Delete(attrs->soundmodeItem);
-    cJSON_Delete(attrs->frmNumItem);
-    cJSON_Delete(attrs->chnCntItem);
-    cJSON_Delete(attrs->SetVolItem);
-    cJSON_Delete(attrs->SetGainItem);
-    cJSON_Delete(attrs->usrFrmDepthItem);
-    */
-}
-
-/**
- * Fetches the audio output attributes from the configuration.
- * @return A structure containing the audio output attributes.
- */
-AudioOutputAttributes get_audio_attributes() {
-    AudioOutputAttributes attrs;
-    attrs.samplerateItem = get_audio_attribute(AUDIO_OUTPUT, "sample_rate");
-    attrs.bitwidthItem = get_audio_attribute(AUDIO_OUTPUT, "bitwidth");
-    attrs.soundmodeItem = get_audio_attribute(AUDIO_OUTPUT, "soundmode");
-    attrs.frmNumItem = get_audio_attribute(AUDIO_OUTPUT, "frmNum");
-    attrs.chnCntItem = get_audio_attribute(AUDIO_OUTPUT, "chnCnt");
-    attrs.SetVolItem = get_audio_attribute(AUDIO_OUTPUT, "SetVol");
-    attrs.SetGainItem = get_audio_attribute(AUDIO_OUTPUT, "SetGain");
-    return attrs;
-}
-
-/**
- * Frees the memory allocated for the audio output attributes.
- * @param attrs Pointer to the audio output attributes structure.
- */
-void free_audio_output_attributes(AudioOutputAttributes *attrs) {
-    /*
-    cJSON_Delete(attrs->samplerateItem);
-    cJSON_Delete(attrs->bitwidthItem);
-    cJSON_Delete(attrs->soundmodeItem);
-    cJSON_Delete(attrs->frmNumItem);
-    cJSON_Delete(attrs->chnCntItem);
-    cJSON_Delete(attrs->SetVolItem);
-    cJSON_Delete(attrs->SetGainItem);
-    */
-}
-
-/**
- * Pauses the audio output.
- */
-void pause_audio_output() {
-    int aoDevID, aoChnID;
-    get_audio_output_device_attributes(&aoDevID, &aoChnID);
-    if (MI_AO_PauseChn(aoDevID, aoChnID) != 0) {
-        handle_audio_error("AO: Failed to pause SigmaStar audio output");
-    }
-}
-
-/**
- * Clears the audio output buffer.
- */
-void clear_audio_output_buffer() {
-    int aoDevID, aoChnID;
-    get_audio_output_device_attributes(&aoDevID, &aoChnID);
-    if (MI_AO_ClearChnBuf(aoDevID, aoChnID) != 0) {
-        handle_audio_error("AO: Failed to clear SigmaStar audio output buffer");
-    }
-}
-
-/**
- * Resumes the audio output.
- */
-void resume_audio_output() {
-    int aoDevID, aoChnID;
-    get_audio_output_device_attributes(&aoDevID, &aoChnID);
-    if (MI_AO_ResumeChn(aoDevID, aoChnID) != 0) {
-        handle_audio_error("AO: Failed to resume SigmaStar audio output");
-    }
-}
-
-/**
- * Flushes the audio output buffer.
- * SigmaStar handles flushing via the Clear command.
- */
-void flush_audio_output_buffer() {
-    int aoDevID, aoChnID;
-    get_audio_output_device_attributes(&aoDevID, &aoChnID);
-    if (MI_AO_ClearChnBuf(aoDevID, aoChnID) != 0) {
-        handle_audio_error("AO: Failed to flush SigmaStar audio output buffer");
-    }
-}
-
-/**
- * Mutes or unmutes the audio output device.
- */
-void mute_audio_output_device(int mute_enable) {
-    int aoDevID, aoChnID;
-    get_audio_output_device_attributes(&aoDevID, &aoChnID);
-    // mute_enable > 0 means TRUE (Mute), 0 means FALSE (Unmute)
-    if (MI_AO_SetMute(aoDevID, mute_enable ? TRUE : FALSE) != 0) {
-        handle_audio_error("AO: Failed to mute SigmaStar audio output device");
-    }
-}
