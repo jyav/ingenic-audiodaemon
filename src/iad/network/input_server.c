@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "input.h"
 #include "logging.h"
