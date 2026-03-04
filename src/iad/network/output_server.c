@@ -44,7 +44,9 @@ void *audio_output_server_thread(void *arg) {
         return NULL;
     }
 
-while (!g_stop_thread) {
+    printf("[INFO] [AO] Server listening on /tmp/audio_output.sock\n");
+    
+    while (!g_stop_thread) {
         client_sock = accept(server_sock, NULL, NULL);
         if (client_sock < 0) {
             if (g_stop_thread) break;
@@ -99,4 +101,3 @@ while (!g_stop_thread) {
     unlink("/tmp/audio_output.sock");
     return NULL;
 }
-printf("[INFO] [AO] Server listening on /tmp/audio_output.sock\n");
