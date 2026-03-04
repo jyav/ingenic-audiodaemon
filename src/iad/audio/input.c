@@ -5,12 +5,6 @@
 #include <pthread.h>
 #include <string.h>
 
-// --- SIGMASTAR HEADERS REMOVED ---
-/*
-#include "imp/imp_audio.h"
-#include "imp/imp_log.h"
-*/
-
 // --- SIGMASTAR HEADERS ADDED ---
 #include "mi_sys.h"
 #include "mi_ai.h"
@@ -70,8 +64,7 @@ int initialize_audio_input_device(int aiDevID, int aiChnID) {
     MI_AI_VqeConfig_t stAiVqe;
     memset(&stAiVqe, 0, sizeof(stAiVqe));
 
-    // Hardcoded to TRUE because audio_common.c fails to parse the JSON for these
-    stAiVqe.bAecOpen = TRUE; // Acoustic Echo Cancellation
+    // ANR and AGC are strictly local to the AI pipeline
     stAiVqe.bAnrOpen = TRUE; // Acoustic Noise Reduction
     stAiVqe.bAgcOpen = TRUE; // Auto Gain Control
     stAiVqe.u32ChnNum = 1;
@@ -90,10 +83,23 @@ int initialize_audio_input_device(int aiDevID, int aiChnID) {
     int aoDevID, aoChnID;
     get_audio_output_device_attributes(&aoDevID, &aoChnID);
 
-    if (MI_AI_SetVqeAttr(aiDevID, aiChnID, aoDevID, aoChnID, &stAiVqe) == 0) {
-        MI_AI_EnableVqe(aiDevID, aiChnID);
+    // --- AEC KERNEL CRASH FIX: Check if AO is actually running before binding ---
+    MI_AUDIO_Attr_t aoAttr;
+    if (MI_AO_GetPubAttr(aoDevID, &aoAttr) == 0) {
+        stAiVqe.bAecOpen = TRUE;
+        if (MI_AI_SetVqeAttr(aiDevID, aiChnID, aoDevID, aoChnID, &stAiVqe) == 0) {
+            MI_AI_EnableVqe(aiDevID, aiChnID);
+        } else {
+            printf("[WARN] [%s] Failed to initialize AI VQE DSP with AEC.\n", TAG);
+        }
     } else {
-        printf("[WARN] [%s] Failed to initialize AI VQE DSP.\n", TAG);
+        printf("[INFO] [%s] AO disabled or uninitialized. Skipping AEC binding.\n", TAG);
+        stAiVqe.bAecOpen = FALSE;
+        if (MI_AI_SetVqeAttr(aiDevID, aiChnID, 0, 0, &stAiVqe) == 0) {
+            MI_AI_EnableVqe(aiDevID, aiChnID);
+        } else {
+            printf("[WARN] [%s] Failed to initialize AI VQE DSP without AEC.\n", TAG);
+        }
     }
 
     // Debugging prints
