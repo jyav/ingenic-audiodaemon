@@ -1,14 +1,14 @@
-#include <errno.h>          
-#include <stdio.h>          
-#include <stdlib.h>         
-#include <unistd.h>         
-#include <pthread.h>        
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <pthread.h>
 #include <string.h>
 
 // --- SIGMASTAR HEADERS REMOVED ---
 /*
-#include "imp/imp_audio.h"  
-#include "imp/imp_log.h"    
+#include "imp/imp_audio.h"
+#include "imp/imp_log.h"
 */
 
 // --- SIGMASTAR HEADERS ADDED ---
@@ -16,13 +16,13 @@
 #include "mi_ai.h"
 #include "mi_ao.h"
 
-#include "audio_common.h"   
-#include "cJSON.h"          
-#include "config.h"         
+#include "audio_common.h"
+#include "cJSON.h"
+#include "config.h"
 #include "input.h"
 #include "output.h"         // Required for DEFAULT_AO_DEV_ID for AEC Binding
-#include "logging.h"        
-#include "utils.h"          
+#include "logging.h"
+#include "utils.h"
 
 #define TRUE 1
 #define TAG "AI"
@@ -35,6 +35,9 @@ int initialize_audio_input_device(int aiDevID, int aiChnID) {
 
     // --- SIGMASTAR INITIALIZATION ---
     MI_AUDIO_Attr_t stAttr;
+    
+    // --- KERNEL PANIC FIX: Zero-initialize the struct ---
+    memset(&stAttr, 0, sizeof(MI_AUDIO_Attr_t)); 
 
     // 1. HARDCODE STRICT SILICON CONSTRAINTS USING MACROS
     stAttr.eBitwidth = E_MI_AUDIO_BIT_WIDTH_16;
@@ -45,8 +48,8 @@ int initialize_audio_input_device(int aiDevID, int aiChnID) {
     stAttr.u32ChnCnt = DEFAULT_AI_CHN_CNT;
 
     // Initialize base hardware
-    if (MI_AI_SetPubAttr(aiDevID, &stAttr) != 0 || 
-        MI_AI_Enable(aiDevID) != 0 || 
+    if (MI_AI_SetPubAttr(aiDevID, &stAttr) != 0 ||
+        MI_AI_Enable(aiDevID) != 0 ||
         MI_AI_EnableChn(aiDevID, aiChnID) != 0) {
         handle_audio_error("AI: Failed to initialize SigmaStar audio attributes");
         exit(EXIT_FAILURE);
@@ -58,8 +61,8 @@ int initialize_audio_input_device(int aiDevID, int aiChnID) {
         printf("[ERROR] [%s] SetVol value out of range: %d. Clamping to %d.\n", TAG, vol, DEFAULT_AI_CHN_VOL);
         vol = DEFAULT_AI_CHN_VOL;
     }
-    
-    // Note: In the SigmaStar SDK, Microphone volume is primarily handled through 
+
+    // Note: In the SigmaStar SDK, Microphone volume is primarily handled through
     // the VQE module when hardware DSP is active.
     MI_AI_SetVqeVolume(aiDevID, aiChnID, vol);
 
@@ -71,19 +74,18 @@ int initialize_audio_input_device(int aiDevID, int aiChnID) {
     stAiVqe.bAecOpen = TRUE; // Acoustic Echo Cancellation
     stAiVqe.bAnrOpen = TRUE; // Acoustic Noise Reduction
     stAiVqe.bAgcOpen = TRUE; // Auto Gain Control
-    
     stAiVqe.u32ChnNum = 1;
     stAiVqe.s32WorkSampleRate = DEFAULT_AI_SAMPLE_RATE;
     stAiVqe.s32FrameSample = 128; // Strict SigmaStar VQE requirement
 
     // Configure AGC (Auto Gain Control) mapped to standard telecom curves
     stAiVqe.stAgcCfg.eMode = E_MI_AUDIO_ALGORITHM_MODE_DEFAULT; // FIXED
-    
+
     // Configure ANR (Acoustic Noise Reduction)
     stAiVqe.stAnrCfg.eMode = E_MI_AUDIO_ALGORITHM_MODE_DEFAULT; // FIXED
-    
+
     // 4. THE AEC BINDING (CRITICAL)
-    // Fetch the dynamically configured AO device to ensure the echo canceller 
+    // Fetch the dynamically configured AO device to ensure the echo canceller
     // binds to the correct active hardware registers.
     int aoDevID, aoChnID;
     get_audio_output_device_attributes(&aoDevID, &aoChnID);
@@ -93,6 +95,7 @@ int initialize_audio_input_device(int aiDevID, int aiChnID) {
     } else {
         printf("[WARN] [%s] Failed to initialize AI VQE DSP.\n", TAG);
     }
+
     // Debugging prints
     printf("[INFO] AI HW Samplerate Locked: 16000 Hz\n");
     printf("[INFO] AI HW Volume: %d dB\n", vol);
@@ -105,39 +108,36 @@ int initialize_audio_input_device(int aiDevID, int aiChnID) {
  */
 void *ai_record_thread(void *arg) {
     printf("[INFO] [AI] Entering ai_record_thread\n");
-
     int aiDevID, aiChnID;
     get_audio_input_device_attributes(&aiDevID, &aiChnID);
 
     printf("[INFO] Sending audio data to input client\n");
 
-// --- CPU SPIN FIX: Honor the stop thread flag ---
+    // --- CPU SPIN FIX: Honor the stop thread flag ---
     while (!g_stop_thread) {
         MI_AUDIO_Frame_t stAiChFrame;
         MI_AUDIO_AecFrame_t stAecFrame;
-        
         memset(&stAiChFrame, 0, sizeof(MI_AUDIO_Frame_t));
         memset(&stAecFrame, 0, sizeof(MI_AUDIO_AecFrame_t));
-        
+
         // --- KERNEL DEADLOCK FIX: Use 200ms timeout instead of -1 (infinite) ---
         if (MI_AI_GetFrame(aiDevID, aiChnID, &stAiChFrame, &stAecFrame, 200) == 0) {
+            
             // --- SIGMASTAR FIX: USE ISOLATED MUTEX ---
             pthread_mutex_lock(&client_list_lock);
-
             ClientNode *current = client_list_head;
+
             while (current) {
                 // --- HARDWARE STALL FIX: Use non-blocking MSG_DONTWAIT ---
                 ssize_t wr_sock = send(current->sockfd, stAiChFrame.apVirAddr[0], stAiChFrame.u32Len, MSG_DONTWAIT);
-                
+
                 // --- AUDIO CORRUPTION FIX: Catch partial sends to prevent byte-shifting ---
                 if (wr_sock < 0 || wr_sock != stAiChFrame.u32Len) {
-                    
                     if (wr_sock < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
                         // Buffer is full. Drop this frame.
                         current = current->next;
                         continue;
                     }
-                    
                     if (wr_sock >= 0 && wr_sock != stAiChFrame.u32Len) {
                         printf("[WARN] Partial PCM send (%zd bytes). Stream misaligned. Kicking client.\n", wr_sock);
                     } else if (errno == EPIPE || errno == ECONNRESET) {
@@ -145,10 +145,10 @@ void *ai_record_thread(void *arg) {
                     } else {
                         handle_audio_error("AI: send to sockfd");
                     }
-                    
+
                     // The socket must be closed at the OS level before we free the memory node
-                    close(current->sockfd); 
-                    
+                    close(current->sockfd);
+
                     if (current == client_list_head) {
                         client_list_head = current->next;
                         free(current);
@@ -166,7 +166,6 @@ void *ai_record_thread(void *arg) {
                 }
                 current = current->next;
             }
-            
             pthread_mutex_unlock(&client_list_lock);
             MI_AI_ReleaseFrame(aiDevID, aiChnID, &stAiChFrame, &stAecFrame);
         } else {
@@ -180,7 +179,6 @@ void *ai_record_thread(void *arg) {
 int disable_audio_input() {
     int aiDevID, aiChnID;
     get_audio_input_device_attributes(&aiDevID, &aiChnID);
-    
     int ret_val = 0; // Track errors but do not abort
 
     if (MI_AI_DisableVqe(aiDevID, aiChnID) != 0) {
@@ -200,5 +198,4 @@ int disable_audio_input() {
 
     MI_AI_ClrPubAttr(aiDevID); // FIXED: Guaranteed to run
     return ret_val;
-
 }
