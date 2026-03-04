@@ -4,7 +4,8 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <string.h>
-
+#include <sys/types.h>
+#include <sys/socket.h>
 // --- SIGMASTAR HEADERS ADDED ---
 #include "mi_sys.h"
 #include "mi_ai.h"
