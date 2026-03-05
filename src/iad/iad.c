@@ -10,6 +10,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <pthread.h>
 
 #include "mi_sys.h"
@@ -145,7 +146,18 @@ int main(int argc, char *argv[]) {
     }
 
 join_threads:
-    // 6. WAIT FOR COMPLETION
+    // 6. MAIN EVENT LOOP: Wait for shutdown signal
+    while (!g_stop_thread) {
+        usleep(100000);
+    }
+
+    // 7. WAKE SLEEPING THREADS
+    pthread_mutex_lock(&audio_buffer_lock);
+    pthread_cond_broadcast(&audio_data_cond);
+    pthread_cond_broadcast(&audio_free_cond);
+    pthread_mutex_unlock(&audio_buffer_lock);
+
+    // 8. JOIN THREADS
     if (control_up) pthread_join(control_server_thread, NULL);
     if (input_up) pthread_join(input_server_thread, NULL);
     if (output_up) pthread_join(output_server_thread, NULL);
@@ -154,8 +166,6 @@ join_threads:
 cleanup:
     // Execute global teardown sequence
     perform_cleanup();
-    
-    // --- KERNEL LEAK FIX: Unmap SigmaStar memory pool ---
     MI_SYS_Exit(); 
     
     printf("[INFO] Audio daemon exited safely.\n");

@@ -62,8 +62,6 @@ int compute_numPerFrm(int sample_rate) {
  * This function cleans up allocated resources and restores the system to its initial state.
  */
 void perform_cleanup() {
-    pthread_mutex_destroy(&audio_buffer_lock);
-    pthread_cond_destroy(&audio_data_cond);
 
     pthread_mutex_lock(&g_stop_thread_mutex);
     g_stop_thread = 1;
@@ -74,8 +72,8 @@ void perform_cleanup() {
     disable_audio_input();
     disable_audio_output();
 
-    // --- SIGMASTAR TEARDOWN ADDED ---
-    MI_SYS_Exit(); // Destroy the memory pool ONLY after disabling the I/O
+    pthread_mutex_destroy(&audio_buffer_lock);
+    pthread_cond_destroy(&audio_data_cond);
     
     config_cleanup();
 }
